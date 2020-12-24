@@ -55,7 +55,7 @@
 		<script src="js/three.js"></script>
 		<script type="module">
 
-			var renderer, scene, camera, controls;
+			var renderer, scene, camera, controls, cameraHolder;
 
 			var particleSystem, geometry;
 
@@ -68,9 +68,15 @@
 			function init() {
 
 				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 100, 10000 );
-				camera.position.z = 300;
+
+				// not work in VR
+				camera.position.set(0, 0, 300);
 
 				scene = new THREE.Scene();
+
+				cameraHolder = new THREE.Group();
+				scene.add(cameraHolder);
+				cameraHolder.add(camera);
 
 				var shaderMaterial = new THREE.ShaderMaterial( {
 
@@ -107,7 +113,7 @@
 
 					positions.push( radius * Math.sin(phi) * Math.cos(theta) );
 					positions.push( radius * Math.sin(phi) * Math.sin(theta) );
-					positions.push( radius * Math.cos(phi) );
+					positions.push( radius * Math.cos(phi));
 
 					offsets.push( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
 
@@ -171,11 +177,9 @@
 			      camera.updateProjectionMatrix();
 			    }
 
-			    camera.position.z = 300;
-
 				var time = performance.now();
 
-				var object = scene.children[ 0 ];
+				var object = scene.children[ 1 ];
 
 				object.rotation.y = time * 0.00005;
 				object.material.uniforms[ "time" ].value = time * 0.004;
