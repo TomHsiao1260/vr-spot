@@ -1,7 +1,12 @@
-html, body {
-   margin: 0;
-   height: 100%;
+body {
+	/* font-family: Oswald, monospace; */
+	font-family: monospace;
+	/* background-color: #f0f0f0; */
+	background-color: #000;
+	margin: 0px;
+	overflow: hidden;
 }
+
 
 #c {
    width: 100%;
