@@ -53,7 +53,7 @@
 				const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 				// Camera 預設在原點，往 -Z 方向看
 				// 調整相機位置以便看到原點的物體
-				camera.position.z = 2.5;
+				camera.position.set(0, 1.6, 0);
 
 				// 建立 Scene
 				const scene = new THREE.Scene();
@@ -78,6 +78,8 @@
 
 			    // 更改 Mesh 位置
 			    cube.position.x = x;
+			    cube.position.y = 1.6;
+				cube.position.z = -2;
 
 			    return cube;
 			  }
