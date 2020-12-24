@@ -130,33 +130,31 @@
 				scene.add( particleSystem );
 
 				const canvas = document.querySelector('#c');
-				const width = canvas.clientWidth * pixelRatio | 0;
-			    const height = canvas.clientHeight * pixelRatio | 0;
-
 				renderer = new THREE.WebGLRenderer({canvas});
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize(width, height, false);
 
 				renderer.xr.enabled = true;
 				document.body.appendChild(VRButton.createButton(renderer));
-
-				//
-
-				window.addEventListener( 'resize', onWindowResize, false );
 
 				renderer.setAnimationLoop( animate );
 
 			}
 
-			function onWindowResize() {
-
-			      const canvas = renderer.domElement;
-			      camera.aspect = canvas.clientWidth / canvas.clientHeight;
-			      camera.updateProjectionMatrix();
-
-				renderer.setSize(width, height, false);
-
-			}
+			  function resizeRendererToDisplaySize(renderer) {
+			    // canvas 初始的 width, height 值即為顯示的解析度，也稱為 drawingbuffer size
+			    const canvas = renderer.domElement;
+			    // pixelRatio 改善 HD-DPI 顯示，讓圖形更 sharp
+			    const pixelRatio = window.devicePixelRatio;
+			    // clientWidth 為 canvas 顯示在 browser 上的寬度 
+			    const width = canvas.clientWidth * pixelRatio | 0;
+			    const height = canvas.clientHeight * pixelRatio | 0;
+			    // 若 clientWidth 與 width 不同會造成模糊，需重新調整
+			    const needResize = canvas.width !== width || canvas.height !== height;
+			    if (needResize) {
+			      // 使用 setSize 改變 canvas 的 drawingbuffer size
+			      renderer.setSize(width, height, false);
+			    }
+			    return needResize;
+			  }
 
 			function animate() {
 
@@ -165,6 +163,14 @@
 			}
 
 			function render() {
+
+				if (resizeRendererToDisplaySize(renderer)) {
+			      // 為了避免畫面撐滿整個 browser 造成顯示上的變形
+			      // 所以動態變更 camera 顯示的長寬比
+			      const canvas = renderer.domElement;
+			      camera.aspect = canvas.clientWidth / canvas.clientHeight;
+			      camera.updateProjectionMatrix();
+			    }
 
 				var time = performance.now();
 
