@@ -107,9 +107,9 @@
 
 					positions.push( radius * Math.sin(phi) * Math.cos(theta) );
 					positions.push( radius * Math.sin(phi) * Math.sin(theta) );
-					positions.push( radius * Math.cos(phi) );
+					positions.push( radius * Math.cos(phi) - 300 );
 
-					offsets.push( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 - 300);
+					offsets.push( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
 
 					color.setHSL( i / particles, 1.0, 0.5 );
 
