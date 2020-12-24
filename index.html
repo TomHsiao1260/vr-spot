@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Hsiao Yao</title>
+		<meta charset="utf-8">
+		<meta http-equiv="x-ua-compatible" content="ie=edge">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+		<link rel="shortcut icon" href="gatsby-icon.png">
+		<meta name="description" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
+		<meta name="image" content="https://tomhsiao1260.github.io/Demo/images/Yao.png">
+		<meta property="og:locale" content="en_US">
+		<meta property="og:url" content="https://tomhsiao1260.github.io/Demo/">
+		<meta property="og:type" content="website">
+		<meta property="og:title" content="Hsiao Yao">
+		<meta property="og:description" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
+		<meta property="og:image" content="https://tomhsiao1260.github.io/Demo/images/Yao.png">
+		<meta property="og:image:alt" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:title" content="Hsiao Yao">
+		<meta name="twitter:description" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
+		<meta name="twitter:image" content="https://tomhsiao1260.github.io/Demo/images/Yao.png">
+		<meta name="twitter:image:alt" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
+		<script type="application/ld+json">{"@context":"http://schema.org","@type":"WebPage","url":"https://tomhsiao1260.github.io","headline":"This is a Hsiao Yao personal website.","inLanguage":"en","mainEntityOfPage":"https://tomhsiao1260.github.io","description":"Website built by Hsiao Yao who is an art lover with physics and engineering background.","name":"Hsiao Yao","author":{"@type":"Person","name":"Hsiao Yao"},"copyrightHolder":{"@type":"Person","name":"Hsiao Yao"},"copyrightYear":"2020","creator":{"@type":"Person","name":"Hsiao Yao"},"publisher":{"@type":"Person","name":"Hsiao Yao"},"datePublished":"2019-10-30T13:31:15.000Z","dateModified":"2020-01-16","image":{"@type":"ImageObject","url":"https://tomhsiao1260.github.io/images/gatsby-icon.png"}}</script>
+		<script type="application/ld+json">{"@context":"http://schema.org","@type":"BreadcrumbList","description":"Breadcrumbs list","name":"Breadcrumbs","itemListElement":[{"@type":"ListItem","item":{"@id":"https://tomhsiao1260.github.io","name":"Homepage"},"position":1}]}</script>
+		<meta name="theme-color" content="#000000">
+	</head>
+	<body>
+		<div id="container"></div>
+		<div id="info">
+			<a href="https://tomhsiao1260.github.io/" target="_blank" rel="noopener">HSIAO YAO</a>
+			<div id="notSupported" style="display:none">Sorry your graphics card + browser does not support hardware instancing</div>
+		</div>
+
+		<script type="x-shader/x-vertex" id="vertexshader">
+
+			attribute float size;
+
+			uniform float sineTime;
+
+			varying vec3 vColor;
+
+			varying vec4 mvPosition;
+
+			void main() {
+
+				vColor = color;
+
+				mvPosition = modelViewMatrix * vec4( sineTime * position, 1.0 );
+
+				gl_PointSize = size * ( 300.0 / -mvPosition.z );
+
+				gl_Position = projectionMatrix * mvPosition;
+
+			}
+
+		</script>
+
+		<script type="x-shader/x-fragment" id="fragmentshader">
+
+			uniform sampler2D pointTexture;
+
+			uniform float time;
+
+			varying vec3 vColor;
+
+			varying vec4 mvPosition;
+
+			void main() {
+
+				gl_FragColor = vec4( vColor, 1.0 );
+
+				gl_FragColor.r += sin( mvPosition.x * 0.3 + time ) * 0.5;
+
+				gl_FragColor = gl_FragColor * texture2D( pointTexture, gl_PointCoord );
+
+			}
+
+		</script>
+		<script src="js/three.js"></script>
+		<script src="js/TrackballControls.js"></script>
+		<script type="module">
+
+			var renderer, scene, camera, controls;
+
+			var particleSystem, geometry;
+
+			var particles = 1000;
+
+			import { VRButton } from "./js/VRButton.js";
+
+			init();
+			animate();
+
+			function init() {
+
+				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 100, 10000 );
+				camera.position.z = 300;
+
+				scene = new THREE.Scene();
+
+				var shaderMaterial = new THREE.ShaderMaterial( {
+
+					uniforms: {
+						time: { value: 1.0 },
+						sineTime: { value: 1.0 },
+						pointTexture: { value: new THREE.TextureLoader().load( "./images/spot.png" ) }
+					},
+					vertexShader: document.getElementById( 'vertexshader' ).textContent,
+					fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+
+					blending: THREE.AdditiveBlending,
+					depthTest: false,
+					transparent: true,
+					vertexColors: true
+
+				} );
+
+
+				geometry = new THREE.BufferGeometry();
+
+				var positions = [];
+				var offsets = [];
+				var colors = [];
+				var sizes = [];
+
+				var color = new THREE.Color();
+
+				for ( var i = 0; i < particles; i ++ ) {
+
+					var radius = (1 - Math.random() * Math.random()) * 200;
+					var theta = Math.random() * Math.PI * 2;
+					var phi = Math.random() * Math.PI;
+
+					positions.push( radius * Math.sin(phi) * Math.cos(theta) );
+					positions.push( radius * Math.sin(phi) * Math.sin(theta) );
+					positions.push( radius * Math.cos(phi) );
+
+					offsets.push( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 );
+
+					color.setHSL( i / particles, 1.0, 0.5 );
+
+					colors.push( Math.random(), Math.random(), 1 );
+
+					sizes.push( 20 );
+
+				}
+
+				geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+				geometry.setAttribute( 'offset', new THREE.Float32BufferAttribute( offsets, 3 ) );
+				geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+				geometry.setAttribute( 'size', new THREE.Float32BufferAttribute( sizes, 1 ).setUsage( THREE.DynamicDrawUsage ) );
+
+				particleSystem = new THREE.Points( geometry, shaderMaterial );
+
+				scene.add( particleSystem );
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				renderer.xr.enabled = true;
+				document.body.appendChild(VRButton.createButton(renderer));
+
+				var container = document.getElementById( 'container' );
+				container.appendChild( renderer.domElement );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+				controls = new THREE.TrackballControls( camera, renderer.domElement);
+				controls.rotateSpeed = 1.0;
+				controls.zoomSpeed = 0.05;
+				controls.panSpeed = 0.1;
+				controls.keys = [ 65, 83, 68 ];
+
+				renderer.setAnimationLoop( animate );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				controls.update();
+
+				render();
+
+			}
+
+			function render() {
+
+				var time = performance.now();
+
+				var object = scene.children[ 0 ];
+
+				object.rotation.y = time * 0.00005;
+				object.material.uniforms[ "time" ].value = time * 0.004;
+				object.material.uniforms[ "sineTime" ].value = Math.sin( object.material.uniforms[ "time" ].value * 0.02 + 2);
+
+				var sizes = geometry.attributes.size.array;
+
+				for ( var i = 0; i < particles; i ++ ) {
+
+					sizes[ i ] = 10 * ( 1 + Math.sin( 0.1 * i + 0.003 * time ) );
+
+				}
+
+				geometry.attributes.size.needsUpdate = true;
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+</body>
+</html>
