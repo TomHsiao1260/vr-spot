@@ -2,10 +2,35 @@
 <html lang="en">
 	<head>
 		<title>Hsiao Yao</title>
+		<meta charset="utf-8">
+		<meta http-equiv="x-ua-compatible" content="ie=edge">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="main.css">
+		<link rel="shortcut icon" href="gatsby-icon.png">
+		<meta name="description" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
+		<meta name="image" content="https://tomhsiao1260.github.io/Demo/images/Yao.png">
+		<meta property="og:locale" content="en_US">
+		<meta property="og:url" content="https://tomhsiao1260.github.io/Demo/">
+		<meta property="og:type" content="website">
+		<meta property="og:title" content="Hsiao Yao">
+		<meta property="og:description" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
+		<meta property="og:image" content="https://tomhsiao1260.github.io/Demo/images/Yao.png">
+		<meta property="og:image:alt" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:title" content="Hsiao Yao">
+		<meta name="twitter:description" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
+		<meta name="twitter:image" content="https://tomhsiao1260.github.io/Demo/images/Yao.png">
+		<meta name="twitter:image:alt" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
+		<script type="application/ld+json">{"@context":"http://schema.org","@type":"WebPage","url":"https://tomhsiao1260.github.io","headline":"This is a Hsiao Yao personal website.","inLanguage":"en","mainEntityOfPage":"https://tomhsiao1260.github.io","description":"Website built by Hsiao Yao who is an art lover with physics and engineering background.","name":"Hsiao Yao","author":{"@type":"Person","name":"Hsiao Yao"},"copyrightHolder":{"@type":"Person","name":"Hsiao Yao"},"copyrightYear":"2020","creator":{"@type":"Person","name":"Hsiao Yao"},"publisher":{"@type":"Person","name":"Hsiao Yao"},"datePublished":"2019-10-30T13:31:15.000Z","dateModified":"2020-01-16","image":{"@type":"ImageObject","url":"https://tomhsiao1260.github.io/images/gatsby-icon.png"}}</script>
+		<script type="application/ld+json">{"@context":"http://schema.org","@type":"BreadcrumbList","description":"Breadcrumbs list","name":"Breadcrumbs","itemListElement":[{"@type":"ListItem","item":{"@id":"https://tomhsiao1260.github.io","name":"Homepage"},"position":1}]}</script>
+		<meta name="theme-color" content="#000000">
 	</head>
 	<body>
-		<canvas id="c"></canvas>
+		<div id="container"></div>
+		<div id="info">
+			<a href="https://tomhsiao1260.github.io/" target="_blank" rel="noopener">HSIAO YAO</a>
+			<div id="notSupported" style="display:none">Sorry your graphics card + browser does not support hardware instancing</div>
+		</div>
 
 		<script type="x-shader/x-vertex" id="vertexshader">
 
@@ -53,25 +78,33 @@
 
 		</script>
 		<script src="js/three.js"></script>
+		<script src="js/TrackballControls.js"></script>
 		<script type="module">
 
-			var renderer, scene, camera, controls, cameraHolder;
+			var renderer, scene, camera, controls;
 
 			var particleSystem, geometry;
 
 			var particles = 1000;
 
+            // 用來改變 camera 位置 (因為 VR 會自動回到原點...)
+			var cameraHolder;
+
+			// 進入 VR 的按鈕 
 			import { VRButton } from "./js/VRButton.js";
 
 			init();
+			animate();
 
 			function init() {
 
 				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 100, 10000 );
-				// camera.position.set(0, 0, 300);
+				// 這段在 VR 無效
+				// camera.position.z = 300;
 
 				scene = new THREE.Scene();
 
+                // 加入 cameraHolder 才能平移
 				cameraHolder = new THREE.Group();
 				scene.add(cameraHolder);
 				cameraHolder.add(camera);
@@ -112,9 +145,9 @@
 
 					positions.push( radius * Math.sin(phi) * Math.cos(theta) );
 					positions.push( radius * Math.sin(phi) * Math.sin(theta) );
-					positions.push( radius * Math.cos(phi));
+					positions.push( radius * Math.cos(phi) );
 
-					offsets.push( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
+					offsets.push( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 );
 
 					color.setHSL( i / particles, 1.0, 0.5 );
 
@@ -133,34 +166,42 @@
 
 				scene.add( particleSystem );
 
-				const canvas = document.querySelector('#c');
-				renderer = new THREE.WebGLRenderer({canvas});
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
 
+				// 啟用 VR
 				renderer.xr.enabled = true;
 				document.body.appendChild(VRButton.createButton(renderer));
 
+				var container = document.getElementById( 'container' );
+				container.appendChild( renderer.domElement );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+				controls = new THREE.TrackballControls( camera, renderer.domElement);
+				controls.rotateSpeed = 1.0;
+				controls.zoomSpeed = 0.05;
+				controls.panSpeed = 0.1;
+				controls.keys = [ 65, 83, 68 ];
+
+				// 加入 VR 的動畫改為這個
 				renderer.setAnimationLoop( animate );
 
 			}
 
-			  function resizeRendererToDisplaySize(renderer) {
-			    // canvas 初始的 width, height 值即為顯示的解析度，也稱為 drawingbuffer size
-			    const canvas = renderer.domElement;
-			    // pixelRatio 改善 HD-DPI 顯示，讓圖形更 sharp
-			    const pixelRatio = window.devicePixelRatio;
-			    // clientWidth 為 canvas 顯示在 browser 上的寬度 
-			    const width = canvas.clientWidth * pixelRatio | 0;
-			    const height = canvas.clientHeight * pixelRatio | 0;
-			    // 若 clientWidth 與 width 不同會造成模糊，需重新調整
-			    const needResize = canvas.width !== width || canvas.height !== height;
-			    if (needResize) {
-			      // 使用 setSize 改變 canvas 的 drawingbuffer size
-			      renderer.setSize(width, height, false);
-			    }
-			    return needResize;
-			  }
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
 
 			function animate() {
+
+				controls.update();
 
 				render();
 
@@ -168,16 +209,9 @@
 
 			function render() {
 
-				if (resizeRendererToDisplaySize(renderer)) {
-			      // 為了避免畫面撐滿整個 browser 造成顯示上的變形
-			      // 所以動態變更 camera 顯示的長寬比
-			      const canvas = renderer.domElement;
-			      camera.aspect = canvas.clientWidth / canvas.clientHeight;
-			      camera.updateProjectionMatrix();
-			    }
-
 				var time = performance.now();
 
+				// 因為 index 為 0 處變為了 cameraHolder 所以要旋轉的對象改為 1
 				var object = scene.children[ 1 ];
 
 				object.rotation.y = time * 0.00005;
