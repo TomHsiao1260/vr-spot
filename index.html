@@ -2,35 +2,10 @@
 <html lang="en">
 	<head>
 		<title>Hsiao Yao</title>
-		<meta charset="utf-8">
-		<meta http-equiv="x-ua-compatible" content="ie=edge">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="main.css">
-		<link rel="shortcut icon" href="gatsby-icon.png">
-		<meta name="description" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
-		<meta name="image" content="https://tomhsiao1260.github.io/Demo/images/Yao.png">
-		<meta property="og:locale" content="en_US">
-		<meta property="og:url" content="https://tomhsiao1260.github.io/Demo/">
-		<meta property="og:type" content="website">
-		<meta property="og:title" content="Hsiao Yao">
-		<meta property="og:description" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
-		<meta property="og:image" content="https://tomhsiao1260.github.io/Demo/images/Yao.png">
-		<meta property="og:image:alt" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
-		<meta name="twitter:card" content="summary_large_image">
-		<meta name="twitter:title" content="Hsiao Yao">
-		<meta name="twitter:description" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
-		<meta name="twitter:image" content="https://tomhsiao1260.github.io/Demo/images/Yao.png">
-		<meta name="twitter:image:alt" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
-		<script type="application/ld+json">{"@context":"http://schema.org","@type":"WebPage","url":"https://tomhsiao1260.github.io","headline":"This is a Hsiao Yao personal website.","inLanguage":"en","mainEntityOfPage":"https://tomhsiao1260.github.io","description":"Website built by Hsiao Yao who is an art lover with physics and engineering background.","name":"Hsiao Yao","author":{"@type":"Person","name":"Hsiao Yao"},"copyrightHolder":{"@type":"Person","name":"Hsiao Yao"},"copyrightYear":"2020","creator":{"@type":"Person","name":"Hsiao Yao"},"publisher":{"@type":"Person","name":"Hsiao Yao"},"datePublished":"2019-10-30T13:31:15.000Z","dateModified":"2020-01-16","image":{"@type":"ImageObject","url":"https://tomhsiao1260.github.io/images/gatsby-icon.png"}}</script>
-		<script type="application/ld+json">{"@context":"http://schema.org","@type":"BreadcrumbList","description":"Breadcrumbs list","name":"Breadcrumbs","itemListElement":[{"@type":"ListItem","item":{"@id":"https://tomhsiao1260.github.io","name":"Homepage"},"position":1}]}</script>
-		<meta name="theme-color" content="#000000">
 	</head>
 	<body>
-		<div id="container"></div>
-<!-- 		<div id="info">
-			<a href="https://tomhsiao1260.github.io/" target="_blank" rel="noopener">HSIAO YAO</a>
-			<div id="notSupported" style="display:none">Sorry your graphics card + browser does not support hardware instancing</div>
-		</div> -->
+		<canvas id="c"></canvas>
 
 		<script type="x-shader/x-vertex" id="vertexshader">
 
@@ -78,7 +53,6 @@
 
 		</script>
 		<script src="js/three.js"></script>
-		<script src="js/TrackballControls.js"></script>
 		<script type="module">
 
 			var renderer, scene, camera, controls;
@@ -155,25 +129,18 @@
 
 				scene.add( particleSystem );
 
-				renderer = new THREE.WebGLRenderer();
+				const canvas = document.querySelector('#c');
+
+				renderer = new THREE.WebGLRenderer({canvas});
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
 				renderer.xr.enabled = true;
 				document.body.appendChild(VRButton.createButton(renderer));
 
-				var container = document.getElementById( 'container' );
-				container.appendChild( renderer.domElement );
-
 				//
 
 				window.addEventListener( 'resize', onWindowResize, false );
-
-				controls = new THREE.TrackballControls( camera, renderer.domElement);
-				controls.rotateSpeed = 1.0;
-				controls.zoomSpeed = 0.05;
-				controls.panSpeed = 0.1;
-				controls.keys = [ 65, 83, 68 ];
 
 				renderer.setAnimationLoop( animate );
 
@@ -189,8 +156,6 @@
 			}
 
 			function animate() {
-
-				controls.update();
 
 				render();
 
