@@ -5,7 +5,7 @@
 		<meta charset="utf-8">
 		<meta http-equiv="x-ua-compatible" content="ie=edge">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<link type="text/css" rel="stylesheet" href="main.css">
+		<link type="text/css" rel="stylesheet" href="style.css">
 		<link rel="shortcut icon" href="gatsby-icon.png">
 		<meta name="description" content="Website built by Hsiao Yao who is an art lover with physics and engineering background.">
 		<meta name="image" content="https://tomhsiao1260.github.io/Demo/images/Yao.png">
@@ -26,201 +26,133 @@
 		<meta name="theme-color" content="#000000">
 	</head>
 	<body>
-		<div id="container"></div>
-		<div id="info">
-			<a href="https://tomhsiao1260.github.io/" target="_blank" rel="noopener">HSIAO YAO</a>
-			<div id="notSupported" style="display:none">Sorry your graphics card + browser does not support hardware instancing</div>
-		</div>
-
-		<script type="x-shader/x-vertex" id="vertexshader">
-
-			attribute float size;
-
-			uniform float sineTime;
-
-			varying vec3 vColor;
-
-			varying vec4 mvPosition;
-
-			void main() {
-
-				vColor = color;
-
-				mvPosition = modelViewMatrix * vec4( sineTime * position, 1.0 );
-
-				gl_PointSize = size * ( 300.0 / -mvPosition.z );
-
-				gl_Position = projectionMatrix * mvPosition;
-
-			}
-
-		</script>
-
-		<script type="x-shader/x-fragment" id="fragmentshader">
-
-			uniform sampler2D pointTexture;
-
-			uniform float time;
-
-			varying vec3 vColor;
-
-			varying vec4 mvPosition;
-
-			void main() {
-
-				gl_FragColor = vec4( vColor, 1.0 );
-
-				gl_FragColor.r += sin( mvPosition.x * 0.3 + time ) * 0.5;
-
-				gl_FragColor = gl_FragColor * texture2D( pointTexture, gl_PointCoord );
-
-			}
-
-		</script>
+		<canvas id="c"></canvas>
 		<script src="js/three.js"></script>
-		<script src="js/TrackballControls.js"></script>
 		<script type="module">
-
-			var renderer, scene, camera, controls;
-
-			var particleSystem, geometry;
-
-			var particles = 1000;
 
 			import { VRButton } from "./js/VRButton.js";
 
-			init();
-			animate();
+			main();
 
-			function init() {
+			function main() {
+			  // 先找到渲染的 canvas 元件
+			  const canvas = document.querySelector('#c');
+			  // 建立 Renderer
+			  const renderer = new THREE.WebGLRenderer({canvas});
 
-				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 100, 10000 );
-				camera.position.z = 300;
+			  renderer.xr.enabled = true;
+			  document.body.appendChild(VRButton.createButton(renderer));
 
-				scene = new THREE.Scene();
+			  
+			  // 建立 Camera
+			  // 下面四個參數決定了一個 frustum 幾何形狀，也就是要被選染的範圍
+			  const fov = 75;   // fov (field of view): 垂直視角，單位 deg
+				const aspect = 2; // aspect: 畫面長寬比，默認值為 2
+				const near = 0.1; // near: 最近要被渲染的距離
+				const far = 5;    // far: 最遠要被渲染的距離
+				const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+				// Camera 預設在原點，往 -Z 方向看
+				// 調整相機位置以便看到原點的物體
+				camera.position.z = 2.5;
 
-				var shaderMaterial = new THREE.ShaderMaterial( {
+				// 建立 Scene
+				const scene = new THREE.Scene();
 
-					uniforms: {
-						time: { value: 1.0 },
-						sineTime: { value: 1.0 },
-						pointTexture: { value: new THREE.TextureLoader().load( "./images/spot.png" ) }
-					},
-					vertexShader: document.getElementById( 'vertexshader' ).textContent,
-					fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+				// 建立方形 Geometry
+				const boxWidth = 1;
+				const boxHeight = 1;
+				const boxDepth = 1;
+				const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
-					blending: THREE.AdditiveBlending,
-					depthTest: false,
-					transparent: true,
-					vertexColors: true
+			  // 製作一個 cube 的 Mesh
+				function makeInstance(geometry, color, x) {
+					// 建立 Material
+			    const material = new THREE.MeshPhongMaterial({color});
+			    // const material = new THREE.MeshBasicMaterial({color: 0x44aa88});
 
-				} );
+			    // 利用 Geometry 和 Material 產生 Mesh
+			    const cube = new THREE.Mesh(geometry, material);
 
+			    // 將 Mesh 加進 Scene 裡
+			    scene.add(cube);
 
-				geometry = new THREE.BufferGeometry();
+			    // 更改 Mesh 位置
+			    cube.position.x = x;
 
-				var positions = [];
-				var offsets = [];
-				var colors = [];
-				var sizes = [];
+			    return cube;
+			  }
 
-				var color = new THREE.Color();
+			  // 產生三個 cube 在不同位置，回傳的 mesh 成為陣列 (供後續動畫使用)
+			  const cubes = [
+			    makeInstance(geometry, 0x44aa88,  0),
+			    makeInstance(geometry, 0x8844aa, -2),
+			    makeInstance(geometry, 0xaa8844,  2),
+			  ];
 
-				for ( var i = 0; i < particles; i ++ ) {
-
-					var radius = (1 - Math.random() * Math.random()) * 200;
-					var theta = Math.random() * Math.PI * 2;
-					var phi = Math.random() * Math.PI;
-
-					positions.push( radius * Math.sin(phi) * Math.cos(theta) );
-					positions.push( radius * Math.sin(phi) * Math.sin(theta) );
-					positions.push( radius * Math.cos(phi) );
-
-					offsets.push( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 );
-
-					color.setHSL( i / particles, 1.0, 0.5 );
-
-					colors.push( Math.random(), Math.random(), 1 );
-
-					sizes.push( 20 );
-
+			  // 加入光線
+				{
+				  const color = 0xFFFFFF;
+				  const intensity = 1;
+				  const light = new THREE.DirectionalLight(color, intensity);
+				  light.position.set(-1, 2, 4);
+				  // 將光線加進 Scene
+				  scene.add(light);
+			    // {} 寫法是為了讓 const, let 參數限制在裡面 (block scope)
 				}
 
-				geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
-				geometry.setAttribute( 'offset', new THREE.Float32BufferAttribute( offsets, 3 ) );
-				geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-				geometry.setAttribute( 'size', new THREE.Float32BufferAttribute( sizes, 1 ).setUsage( THREE.DynamicDrawUsage ) );
+			  // 使用 setSize 隨顯示畫面大小改變 canvas 的顯示的解析度
+			  // 同時回傳 boolean 判斷 camera aspect 是否更新
+			  function resizeRendererToDisplaySize(renderer) {
+			    // canvas 初始的 width, height 值即為顯示的解析度，也稱為 drawingbuffer size
+			    const canvas = renderer.domElement;
+			    // pixelRatio 改善 HD-DPI 顯示，讓圖形更 sharp
+			    const pixelRatio = window.devicePixelRatio;
+			    // clientWidth 為 canvas 顯示在 browser 上的寬度 
+			    const width = canvas.clientWidth * pixelRatio | 0;
+			    const height = canvas.clientHeight * pixelRatio | 0;
+			    // 若 clientWidth 與 width 不同會造成模糊，需重新調整
+			    const needResize = canvas.width !== width || canvas.height !== height;
+			    if (needResize) {
+			      // 使用 setSize 改變 canvas 的 drawingbuffer size
+			      renderer.setSize(width, height, false);
+			    }
+			    return needResize;
+			  }
 
-				particleSystem = new THREE.Points( geometry, shaderMaterial );
+			  // 加入動畫 和 RWD
+			  function render(time) {
+			  	// convert time to seconds
+			    time *= 0.001;
 
-				scene.add( particleSystem );
+			    // RWD 設計
+			    if (resizeRendererToDisplaySize(renderer)) {
+			      // 為了避免畫面撐滿整個 browser 造成顯示上的變形
+			      // 所以動態變更 camera 顯示的長寬比
+			      const canvas = renderer.domElement;
+			      camera.aspect = canvas.clientWidth / canvas.clientHeight;
+			      camera.updateProjectionMatrix();
+			    }
 
-				renderer = new THREE.WebGLRenderer();
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
+			    // 改變 rotation 讓每個 cube 旋轉
+			    cubes.forEach((cube, ndx) => {
+			      const speed = 1 + ndx * .1;
+			      const rot = time * speed;
+			      cube.rotation.x = rot;
+			      cube.rotation.y = rot;
+			    });
 
-				renderer.xr.enabled = true;
-				document.body.appendChild(VRButton.createButton(renderer));
+			    // 最終，透過 renderer 渲染出每個 frame 的結果
+			    renderer.render(scene, camera);
+			  }
+			  // 每過一段時間就會重新 render 畫面
+			  renderer.setAnimationLoop( render );
 
-				var container = document.getElementById( 'container' );
-				container.appendChild( renderer.domElement );
-
-				//
-
-				window.addEventListener( 'resize', onWindowResize, false );
-
-				// controls = new THREE.TrackballControls( camera, renderer.domElement);
-				// controls.rotateSpeed = 1.0;
-				// controls.zoomSpeed = 0.05;
-				// controls.panSpeed = 0.1;
-				// controls.keys = [ 65, 83, 68 ];
-
-				renderer.setAnimationLoop( animate );
-
+			  // 使用 WebGLRenderer 作為 Renderer
+			  // 使用 PrspectiveCamera 作為 Camera (不在 scenegraph 內)
+			  // scenegraph 裡的源頭為 Scene
+			  // Scene 上加入了 DirectionalLight 和三個 Mesh 物件
+			  // 其中三個 Mesh 共用了同個 BoxGeometry 和 PhongMaterial
 			}
-
-			function onWindowResize() {
-
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-			}
-
-			function animate() {
-
-				// controls.update();
-
-				render();
-
-			}
-
-			function render() {
-
-				var time = performance.now();
-
-				var object = scene.children[ 0 ];
-
-				object.rotation.y = time * 0.00005;
-				object.material.uniforms[ "time" ].value = time * 0.004;
-				object.material.uniforms[ "sineTime" ].value = Math.sin( object.material.uniforms[ "time" ].value * 0.02 + 2);
-
-				var sizes = geometry.attributes.size.array;
-
-				for ( var i = 0; i < particles; i ++ ) {
-
-					sizes[ i ] = 10 * ( 1 + Math.sin( 0.1 * i + 0.003 * time ) );
-
-				}
-
-				geometry.attributes.size.needsUpdate = true;
-
-				renderer.render( scene, camera );
-
-			}
-
 		</script>
-
-</body>
+	</body>
 </html>
