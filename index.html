@@ -68,15 +68,14 @@
 			function init() {
 
 				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 100, 10000 );
-
-				// not work in VR
-				camera.position.set(0, 0, 300);
+				// camera.position.set(0, 0, 300);
 
 				scene = new THREE.Scene();
 
 				cameraHolder = new THREE.Group();
 				scene.add(cameraHolder);
 				cameraHolder.add(camera);
+				cameraHolder.position.set(0, 0, 300);
 
 				var shaderMaterial = new THREE.ShaderMaterial( {
 
