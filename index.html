@@ -109,7 +109,7 @@
 					positions.push( radius * Math.sin(phi) * Math.sin(theta) );
 					positions.push( radius * Math.cos(phi) );
 
-					offsets.push( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 );
+					offsets.push( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 - 300);
 
 					color.setHSL( i / particles, 1.0, 0.5 );
 
@@ -171,7 +171,7 @@
 			      camera.updateProjectionMatrix();
 			    }
 
-				var time = performance.now();
+				// var time = performance.now();
 
 				// var object = scene.children[ 0 ];
 
