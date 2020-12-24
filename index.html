@@ -107,7 +107,7 @@
 
 					positions.push( radius * Math.sin(phi) * Math.cos(theta) );
 					positions.push( radius * Math.sin(phi) * Math.sin(theta) );
-					positions.push( radius * Math.cos(phi) - 300 );
+					positions.push( radius * Math.cos(phi) );
 
 					offsets.push( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
 
@@ -170,6 +170,8 @@
 			      camera.aspect = canvas.clientWidth / canvas.clientHeight;
 			      camera.updateProjectionMatrix();
 			    }
+
+			    camera.position.z = 300;
 
 				var time = performance.now();
 
